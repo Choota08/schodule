@@ -12,12 +12,12 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('user_id')
+                  ->unique()
                   ->constrained('users')
                   ->cascadeOnDelete();
 
-            $table->year('year');
+            $table->year('year')->index();
             $table->date('date_of_birth')->nullable();
-            $table->string('profile_photo')->nullable();
 
             $table->timestamps();
         });

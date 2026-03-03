@@ -6,9 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Subject extends Model
 {
-    protected $fillable = [
-        'name',
-    ];
+    protected $fillable = ['name'];
 
     public function subSubjects()
     {
@@ -18,5 +16,10 @@ class Subject extends Model
     public function schedules()
     {
         return $this->hasMany(Schedule::class);
+    }
+
+    public function hasSubSubjects()
+    {
+        return $this->subSubjects()->exists();
     }
 }

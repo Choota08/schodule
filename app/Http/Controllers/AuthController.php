@@ -4,55 +4,87 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function showLogin()
-    {
-        return view('auth.login');
-    }
-
+    /*
+    |--------------------------------------------------------------------------
+    | LOGIN
+    |--------------------------------------------------------------------------
+    */
     public function login(Request $request)
     {
-        $request->validate([
-            'kode_user' => 'required',
-            'password' => 'required',
+        $credentials = $request->validate([
+            'kode_user' => 'required|string',
+            'password'  => 'required|string',
         ]);
 
-        if (Auth::attempt([
-            'kode_user' => $request->kode_user,
-            'password' => $request->password
-        ])) {
-
-            $request->session()->regenerate();
-
-            $user = Auth::user();
-
-            if ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard');
-            }
-
-            if ($user->role === 'teacher') {
-                return redirect()->route('teacher.dashboard');
-            }
-
-            if ($user->role === 'student') {
-                return redirect()->route('student.dashboard');
-            }
+        if (!Auth::attempt($credentials)) {
+            throw ValidationException::withMessages([
+                'kode_user' => ['Invalid user code or password.'],
+            ]);
         }
 
-        return back()->withErrors([
-            'kode_user' => 'ID atau password salah.',
+        $user = Auth::user();
+
+        // Optional: revoke previous tokens (uncomment if needed)
+        // $user->tokens()->delete();
+
+        // 🔥 Create Sanctum Token (multi-device support)
+        $token = $user->createToken(
+            $request->userAgent() ?? 'auth_token'
+        )->plainTextToken;
+
+        return response()->json([
+            'message'      => 'Login successful',
+            'access_token' => $token,
+            'token_type'   => 'Bearer',
+            'user'         => $user
         ]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | LOGOUT (Current Device)
+    |--------------------------------------------------------------------------
+    */
     public function logout(Request $request)
     {
-        Auth::logout();
+        $token = $request->user()?->currentAccessToken();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        if ($token) {
+            $token->delete();
+        }
 
-        return redirect()->route('login');
+        return response()->json([
+            'message' => 'Logout successful'
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOGOUT ALL DEVICES (Optional)
+    |--------------------------------------------------------------------------
+    */
+    public function logoutAll(Request $request)
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Logged out from all devices'
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET AUTHENTICATED USER
+    |--------------------------------------------------------------------------
+    */
+    public function me(Request $request)
+    {
+        return response()->json([
+            'user' => $request->user()
+        ]);
     }
 }

@@ -19,6 +19,9 @@ return new class extends Migration
                   ->constrained('students')
                   ->cascadeOnDelete();
 
+            // kontrol aktif/tidak
+            $table->boolean('is_active')->default(true);
+
             $table->timestamps();
 
             $table->unique(['class_room_id', 'student_id']);

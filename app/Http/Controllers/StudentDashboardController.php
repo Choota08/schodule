@@ -3,15 +3,39 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
+use App\Models\Schedule;
 
 class StudentDashboardController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth:sanctum', 'role:student']);
+    }
+
     public function index()
     {
-        $student = Auth::user()->student;
+        $user = Auth::user();
+        $student = $user->student;
 
-        $classes = $student->classes()->with('schedules.session')->get();
+        if (!$student) {
+            return response()->json([
+                'message' => 'Student data not found'
+            ], 404);
+        }
 
-        return view('student.dashboard', compact('student','classes'));
+        // 🔥 Ambil semua kelas siswa
+        $classIds = $student->classRooms()->pluck('class_rooms.id');
+
+        // 🔥 Ambil semua jadwal dari kelas tersebut
+        $schedules = Schedule::whereIn('class_room_id', $classIds)
+            ->orderBy('day')
+            ->orderBy('session_id')
+            ->get();
+
+        return response()->json([
+            'student'   => $student,
+            'classes'   => $student->classRooms,
+            'schedules' => $schedules
+        ]);
     }
 }

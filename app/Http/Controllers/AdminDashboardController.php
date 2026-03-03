@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Student;
 use App\Models\Teacher;
-use App\Models\ClassRoom;
 use App\Models\Schedule;
+use Illuminate\Support\Facades\Cache;
 
 class AdminDashboardController extends Controller
 {
     public function index()
     {
-        $totalStudents = Student::count();
-        $totalTeachers = Teacher::count();
-        $totalClasses  = ClassRoom::count();
-        $totalSchedules = Schedule::count();
+        $data = Cache::remember('admin_dashboard_stats', 60, function () {
+            return [
+                'total_users' => User::count(),
+                'total_students' => Student::count(),
+                'total_teachers' => Teacher::count(),
+                'total_schedules' => Schedule::count(),
+            ];
+        });
 
-        return view('admin.dashboard', compact(
-            'totalStudents',
-            'totalTeachers',
-            'totalClasses',
-            'totalSchedules'
-        ));
+        return response()->json($data);
     }
 }

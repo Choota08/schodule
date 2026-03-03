@@ -8,7 +8,7 @@ class SubSubject extends Model
 {
     protected $fillable = [
         'subject_id',
-        'name',
+        'name'
     ];
 
     public function subject()

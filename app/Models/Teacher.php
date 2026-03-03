@@ -7,16 +7,41 @@ use Illuminate\Support\Facades\Storage;
 
 class Teacher extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | MASS ASSIGNMENT
+    |--------------------------------------------------------------------------
+    */
+
     protected $fillable = [
         'user_id',
-        'specialization',
+        'teacher_code',
+        'subject_id',
         'date_of_birth',
         'profile_photo',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | CASTING
+    |--------------------------------------------------------------------------
+    */
+
     protected $casts = [
         'date_of_birth' => 'date',
-        'created_at' => 'datetime',
+        'created_at'    => 'datetime',
+        'updated_at'    => 'datetime',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTO LOAD RELATIONS (Avoid N+1)
+    |--------------------------------------------------------------------------
+    */
+
+    protected $with = [
+        'user',
+        'subject',
     ];
 
     /*
@@ -25,14 +50,47 @@ class Teacher extends Model
     |--------------------------------------------------------------------------
     */
 
+    // Relasi ke akun login
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    // Guru hanya 1 mapel
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class);
+    }
+
+    // Relasi ke jadwal
     public function schedules()
     {
         return $this->hasMany(Schedule::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCOPES (Filtering API)
+    |--------------------------------------------------------------------------
+    */
+
+    public function scopeBySubject($query, $subjectId)
+    {
+        return $query->where('subject_id', $subjectId);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CONFLICT HELPER (Core Scheduling System)
+    |--------------------------------------------------------------------------
+    */
+
+    public function hasConflict($day, $sessionId)
+    {
+        return $this->schedules()
+            ->where('day', $day)
+            ->where('session_id', $sessionId)
+            ->exists();
     }
 
     /*
