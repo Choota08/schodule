@@ -7,55 +7,61 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\TeacherDashboardController;
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\SubSubjectController;
 
-// | AUTH ROUTES
-
+// Login
 
 Route::post('/login', [AuthController::class, 'login']);
 
-// | PROTECTED ROUTES (SANCTUM)
 
+// PROTECTED
 
 Route::middleware('auth:sanctum')->group(function () {
 
-    // | AUTH
-
+    // AUTH
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/logout-all', [AuthController::class, 'logoutAll']);
     Route::get('/me', [AuthController::class, 'me']);
 
-    // | ADMIN ROUTES
+
+    // PUBLIC
+
+    Route::apiResource('subjects', SubjectController::class);
+    Route::apiResource('sub-subjects', SubSubjectController::class);
 
 
-        Route::prefix('admin')
-            ->middleware('role:admin')
-            ->group(function () {
+    // ADMIN
 
-        // | Dashboard
+    Route::prefix('admin')
+        ->middleware('role:admin')
+        ->group(function () {
+
+        // Dashboard
         Route::get('/dashboard', [AdminDashboardController::class, 'index']);
 
-        // | 🔥 IMPORT USERS
+        // Import users
         Route::post('/import/teachers', [UserController::class, 'importTeachers']);
         Route::post('/import/students', [UserController::class, 'importStudents']);
 
-        // | Users Management
-        Route::apiResource('/users', UserController::class);
+        // Users management
+        Route::apiResource('users', UserController::class);
 
-        // | Schedule Management
-        Route::apiResource('/schedules', ScheduleController::class);
+        // Schedule management
+        Route::apiResource('schedules', ScheduleController::class);
 
-        // | Filtering
+        // Filtering helpers
         Route::get('/subjects/{subject}/teachers', [ScheduleController::class, 'teachersBySubject']);
         Route::get('/subjects/{subject}/sub-subjects', [ScheduleController::class, 'subSubjectsBySubject']);
 
-        // | View Schedule
+        // Schedule views
         Route::get('/schedules/class/{classRoom}', [ScheduleController::class, 'byClass']);
         Route::get('/schedules/teacher/{teacher}', [ScheduleController::class, 'byTeacher']);
     });
 
-    // | TEACHER ROUTES
 
+    // Teacher
 
     Route::prefix('teacher')
         ->middleware('role:teacher')
@@ -63,12 +69,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/dashboard', [TeacherDashboardController::class, 'index']);
 
-        // Teacher hanya lihat jadwalnya sendiri
+        //jadwal sendiri
         Route::get('/schedules', [ScheduleController::class, 'mySchedule']);
     });
 
-    // | STUDENT ROUTES
 
+    // Student
 
     Route::prefix('student')
         ->middleware('role:student')
@@ -76,7 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/dashboard', [StudentDashboardController::class, 'index']);
 
-        // Student lihat jadwal berdasarkan kelasnya
+        //jadwal kelasnya
         Route::get('/schedules', [ScheduleController::class, 'classSchedule']);
     });
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -44,13 +45,9 @@ class AuthController extends Controller
         ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOGOUT (Current Device)
-    |--------------------------------------------------------------------------
-    */
-    public function logout(Request $request)
+   public function logout(Request $request)
     {
+        /** @var PersonalAccessToken|null $token */
         $token = $request->user()?->currentAccessToken();
 
         if ($token) {
@@ -62,11 +59,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOGOUT ALL DEVICES (Optional)
-    |--------------------------------------------------------------------------
-    */
     public function logoutAll(Request $request)
     {
         $request->user()->tokens()->delete();

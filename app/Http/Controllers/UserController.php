@@ -5,13 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\UsersImport;
 
 class UserController extends Controller
 {
-    // =========================
-    // GET ALL USERS
-    // =========================
-    public function index(Request $request)
+        public function index(Request $request)
     {
         $query = User::query();
 
@@ -27,9 +26,6 @@ class UserController extends Controller
         ]);
     }
 
-    // =========================
-    // STORE USER
-    // =========================
     public function store(Request $request)
     {
         $request->validate([
@@ -52,9 +48,6 @@ class UserController extends Controller
         ], 201);
     }
 
-    // =========================
-    // SHOW USER
-    // =========================
     public function show($id)
     {
         $user = User::findOrFail($id);
@@ -65,9 +58,6 @@ class UserController extends Controller
         ]);
     }
 
-    // =========================
-    // UPDATE USER
-    // =========================
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -90,9 +80,7 @@ class UserController extends Controller
         ]);
     }
 
-    // =========================
-    // UPDATE PASSWORD
-    // =========================
+
     public function updatePassword(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -110,9 +98,6 @@ class UserController extends Controller
         ]);
     }
 
-    // =========================
-    // DELETE USER
-    // =========================
     public function destroy($id)
     {
         $user = User::findOrFail($id);
@@ -120,6 +105,32 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'User berhasil dihapus'
+        ]);
+    }
+
+    public function importTeachers(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,csv'
+        ]);
+
+        Excel::import(new UsersImport('teacher'), $request->file('file'));
+
+        return response()->json([
+            'message' => 'Teachers imported successfully'
+        ]);
+    }
+
+    public function importStudents(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,csv'
+        ]);
+
+        Excel::import(new UsersImport('student'), $request->file('file'));
+
+        return response()->json([
+            'message' => 'Students imported successfully'
         ]);
     }
 }

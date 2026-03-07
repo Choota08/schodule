@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'kode_user',
@@ -25,14 +26,13 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'password' => 'hashed', // 🔥 otomatis hash jika set password
+        'password' => 'hashed',
     ];
 
     protected $appends = [
         'profile_photo_url'
     ];
 
-    // 🔥 Login pakai kode_user
     public function getAuthIdentifierName()
     {
         return 'kode_user';
@@ -46,17 +46,17 @@ class User extends Authenticatable
 
     public function student()
     {
-        return $this->hasOne(\App\Models\Student::class);
+        return $this->hasOne(Student::class);
     }
 
     public function teacher()
     {
-        return $this->hasOne(\App\Models\Teacher::class);
+        return $this->hasOne(Teacher::class);
     }
 
     /*
     |--------------------------------------------------------------------------
-    | ACCESSORS
+    | ACCESSOR
     |--------------------------------------------------------------------------
     */
 

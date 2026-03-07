@@ -11,11 +11,6 @@ use Illuminate\Database\QueryException;
 
 class ScheduleController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | INDEX
-    |--------------------------------------------------------------------------
-    */
     public function index(Request $request)
     {
         $query = Schedule::with([

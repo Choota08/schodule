@@ -23,10 +23,10 @@ class StudentDashboardController extends Controller
             ], 404);
         }
 
-        // 🔥 Ambil semua kelas siswa
+        //  Ambil semua kelas siswa
         $classIds = $student->classRooms()->pluck('class_rooms.id');
 
-        // 🔥 Ambil semua jadwal dari kelas tersebut
+        //  Ambil semua jadwal dari kelas tersebut
         $schedules = Schedule::whereIn('class_room_id', $classIds)
             ->orderBy('day')
             ->orderBy('session_id')
