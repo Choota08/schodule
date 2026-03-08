@@ -8,14 +8,20 @@ class SubSubject extends Model
 {
     protected $fillable = [
         'subject_id',
-        'name'
+        'name',
     ];
 
+    /**
+     * Get the parent subject
+     */
     public function subject()
     {
         return $this->belongsTo(Subject::class);
     }
 
+    /**
+     * Get all schedules using this sub-subject
+     */
     public function schedules()
     {
         return $this->hasMany(Schedule::class);

@@ -11,13 +11,19 @@ class ClassRoom extends Model
         'description',
     ];
 
+    /**
+     * Get all students enrolled in this classroom
+     */
     public function students()
     {
         return $this->belongsToMany(Student::class, 'class_student')
-                    ->withPivot('joined_at')
-                    ->withTimestamps();
+            ->withPivot('joined_at')
+            ->withTimestamps();
     }
 
+    /**
+     * Get all schedules for this classroom
+     */
     public function schedules()
     {
         return $this->hasMany(Schedule::class);

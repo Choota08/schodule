@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
 use App\Models\Schedule;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class TeacherDashboardController extends Controller
 {
@@ -13,13 +13,16 @@ class TeacherDashboardController extends Controller
         $this->middleware(['auth:sanctum', 'role:teacher']);
     }
 
+    /**
+     * Get teacher dashboard with today's schedules
+     */
     public function index()
     {
         $teacher = Auth::user()->teacher;
 
         if (!$teacher) {
             return response()->json([
-                'message' => 'Teacher data not found'
+                'message' => 'Teacher data not found',
             ], 404);
         }
 
@@ -28,11 +31,11 @@ class TeacherDashboardController extends Controller
         );
 
         $todaySchedules = Schedule::with([
-                'classRoom:id,name',
-                'subject:id,name',
-                'subSubject:id,name',
-                'session:id,name,start_time,end_time'
-            ])
+            'classRoom:id,name',
+            'subject:id,name',
+            'subSubject:id,name',
+            'session:id,name,start_time,end_time',
+        ])
             ->where('teacher_id', $teacher->id)
             ->where('day', $today)
             ->orderBy('session_id')
@@ -41,7 +44,7 @@ class TeacherDashboardController extends Controller
         return response()->json([
             'teacher' => $teacher,
             'today' => $today,
-            'today_schedules' => $todaySchedules
+            'today_schedules' => $todaySchedules,
         ]);
     }
 }

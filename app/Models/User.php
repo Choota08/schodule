@@ -17,12 +17,12 @@ class User extends Authenticatable
         'name',
         'password',
         'role',
-        'profile_photo'
+        'profile_photo',
     ];
 
     protected $hidden = [
         'password',
-        'remember_token'
+        'remember_token',
     ];
 
     protected $casts = [
@@ -30,36 +30,36 @@ class User extends Authenticatable
     ];
 
     protected $appends = [
-        'profile_photo_url'
+        'profile_photo_url',
     ];
 
+    /**
+     * Use kode_user as the unique identifier for authentication
+     */
     public function getAuthIdentifierName()
     {
         return 'kode_user';
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RELATIONS
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * Get associated student record
+     */
     public function student()
     {
         return $this->hasOne(Student::class);
     }
 
+    /**
+     * Get associated teacher record
+     */
     public function teacher()
     {
         return $this->hasOne(Teacher::class);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ACCESSOR
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * Get profile photo URL from storage
+     */
     public function getProfilePhotoUrlAttribute()
     {
         if ($this->profile_photo) {

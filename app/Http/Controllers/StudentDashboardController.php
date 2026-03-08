@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
 use App\Models\Schedule;
+use Illuminate\Support\Facades\Auth;
 
 class StudentDashboardController extends Controller
 {
@@ -12,6 +12,9 @@ class StudentDashboardController extends Controller
         $this->middleware(['auth:sanctum', 'role:student']);
     }
 
+    /**
+     * Get student dashboard with their classes and schedules
+     */
     public function index()
     {
         $user = Auth::user();
@@ -19,23 +22,21 @@ class StudentDashboardController extends Controller
 
         if (!$student) {
             return response()->json([
-                'message' => 'Student data not found'
+                'message' => 'Student data not found',
             ], 404);
         }
 
-        //  Ambil semua kelas siswa
         $classIds = $student->classRooms()->pluck('class_rooms.id');
 
-        //  Ambil semua jadwal dari kelas tersebut
         $schedules = Schedule::whereIn('class_room_id', $classIds)
             ->orderBy('day')
             ->orderBy('session_id')
             ->get();
 
         return response()->json([
-            'student'   => $student,
-            'classes'   => $student->classRooms,
-            'schedules' => $schedules
+            'student' => $student,
+            'classes' => $student->classRooms,
+            'schedules' => $schedules,
         ]);
     }
 }

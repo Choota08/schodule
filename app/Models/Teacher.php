@@ -7,12 +7,6 @@ use Illuminate\Support\Facades\Storage;
 
 class Teacher extends Model
 {
-    /*
-    |--------------------------------------------------------------------------
-    | MASS ASSIGNMENT
-    |--------------------------------------------------------------------------
-    */
-
     protected $fillable = [
         'user_id',
         'teacher_code',
@@ -22,67 +16,49 @@ class Teacher extends Model
         'profile_photo',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | CASTING
-    |--------------------------------------------------------------------------
-    */
-
     protected $casts = [
         'date_of_birth' => 'date',
-        'created_at'    => 'datetime',
-        'updated_at'    => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | AUTO LOAD RELATIONS
-    |--------------------------------------------------------------------------
-    */
+    protected $with = ['user', 'subject'];
 
-    protected $with = [
-        'user',
-        'subject',
-    ];
-
-    /*
-    |--------------------------------------------------------------------------
-    | RELATIONSHIPS
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * Get the user associated with this teacher
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Get the subject this teacher teaches
+     */
     public function subject()
     {
         return $this->belongsTo(Subject::class);
     }
 
+    /**
+     * Get all schedules for this teacher
+     */
     public function schedules()
     {
         return $this->hasMany(Schedule::class);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SCOPES
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * Scope to filter teachers by subject
+     */
     public function scopeBySubject($query, $subjectId)
     {
         return $query->where('subject_id', $subjectId);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CONFLICT CHECK
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * Check if teacher has a schedule conflict
+     */
     public function hasConflict($day, $sessionId)
     {
         return $this->schedules()
@@ -91,12 +67,9 @@ class Teacher extends Model
             ->exists();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ACCESSORS
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * Get profile photo URL from storage
+     */
     public function getProfilePhotoUrlAttribute()
     {
         if ($this->profile_photo) {
@@ -106,10 +79,11 @@ class Teacher extends Model
         return asset('images/default-avatar.png');
     }
 
+    /**
+     * Calculate age from date of birth
+     */
     public function getAgeAttribute()
     {
-        return $this->date_of_birth
-            ? $this->date_of_birth->age
-            : null;
+        return $this->date_of_birth ? $this->date_of_birth->age : null;
     }
 }

@@ -9,16 +9,14 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | LOGIN
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * Handle user authentication and generate API token
+     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
             'kode_user' => 'required|string',
-            'password'  => 'required|string',
+            'password' => 'required|string',
         ]);
 
         if (!Auth::attempt($credentials)) {
@@ -28,24 +26,20 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
-
-        // Optional: revoke previous tokens (uncomment if needed)
-        // $user->tokens()->delete();
-
-        // 🔥 Create Sanctum Token (multi-device support)
-        $token = $user->createToken(
-            $request->userAgent() ?? 'auth_token'
-        )->plainTextToken;
+        $token = $user->createToken($request->userAgent() ?? 'auth_token')->plainTextToken;
 
         return response()->json([
-            'message'      => 'Login successful',
+            'message' => 'Login successful',
             'access_token' => $token,
-            'token_type'   => 'Bearer',
-            'user'         => $user
+            'token_type' => 'Bearer',
+            'user' => $user,
         ]);
     }
 
-   public function logout(Request $request)
+    /**
+     * Logout current device by revoking current token
+     */
+    public function logout(Request $request)
     {
         /** @var PersonalAccessToken|null $token */
         $token = $request->user()?->currentAccessToken();
@@ -55,28 +49,29 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Logout successful'
+            'message' => 'Logout successful',
         ]);
     }
 
+    /**
+     * Logout from all devices by revoking all tokens
+     */
     public function logoutAll(Request $request)
     {
         $request->user()->tokens()->delete();
 
         return response()->json([
-            'message' => 'Logged out from all devices'
+            'message' => 'Logged out from all devices',
         ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | GET AUTHENTICATED USER
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * Get current authenticated user data
+     */
     public function me(Request $request)
     {
         return response()->json([
-            'user' => $request->user()
+            'user' => $request->user(),
         ]);
     }
 }

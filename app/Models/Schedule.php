@@ -7,12 +7,6 @@ use Illuminate\Database\Eloquent\Builder;
 
 class Schedule extends Model
 {
-    /*
-    |--------------------------------------------------------------------------
-    | MASS ASSIGNMENT (Sesuai urutan input admin)
-    |--------------------------------------------------------------------------
-    */
-
     protected $fillable = [
         'class_room_id',
         'subject_id',
@@ -22,64 +16,73 @@ class Schedule extends Model
         'day',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | RELATIONSHIPS
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * Get the classroom for this schedule
+     */
     public function classRoom()
     {
         return $this->belongsTo(ClassRoom::class);
     }
 
+    /**
+     * Get the subject for this schedule
+     */
     public function subject()
     {
         return $this->belongsTo(Subject::class);
     }
 
+    /**
+     * Get the sub-subject for this schedule
+     */
     public function subSubject()
     {
         return $this->belongsTo(SubSubject::class);
     }
 
+    /**
+     * Get the teacher for this schedule
+     */
     public function teacher()
     {
         return $this->belongsTo(Teacher::class);
     }
 
+    /**
+     * Get the session for this schedule
+     */
     public function session()
     {
         return $this->belongsTo(Session::class);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SCOPES (Digunakan di Controller jika perlu)
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * Scope to filter schedules by day
+     */
     public function scopeByDay(Builder $query, $day)
     {
         return $query->where('day', $day);
     }
 
+    /**
+     * Scope to filter schedules by teacher
+     */
     public function scopeByTeacher(Builder $query, $teacherId)
     {
         return $query->where('teacher_id', $teacherId);
     }
 
+    /**
+     * Scope to filter schedules by classroom
+     */
     public function scopeByClass(Builder $query, $classId)
     {
         return $query->where('class_room_id', $classId);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CONFLICT CHECK (Digunakan di Controller)
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * Check if a classroom has a schedule conflict
+     */
     public static function hasClassConflict($classId, $day, $sessionId, $ignoreId = null)
     {
         $query = self::query()
@@ -94,6 +97,9 @@ class Schedule extends Model
         return $query->exists();
     }
 
+    /**
+     * Check if a teacher has a schedule conflict
+     */
     public static function hasTeacherConflict($teacherId, $day, $sessionId, $ignoreId = null)
     {
         $query = self::query()

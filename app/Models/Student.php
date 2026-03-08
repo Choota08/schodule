@@ -14,8 +14,8 @@ class Student extends Model
 
     protected $casts = [
         'date_of_birth' => 'date',
-        'created_at'    => 'datetime',
-        'updated_at'    => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -24,46 +24,42 @@ class Student extends Model
         'registered_at',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | RELATIONSHIPS
-    |--------------------------------------------------------------------------
-    */
-
-    // Student belongs to a User (for authentication)
+    /**
+     * Get the user associated with this student
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Student can join multiple classes (for tutoring system)
+    /**
+     * Get all classrooms this student is enrolled in
+     */
     public function classRooms()
     {
         return $this->belongsToMany(ClassRoom::class, 'class_student')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ACCESSORS
-    |--------------------------------------------------------------------------
-    */
-
-    // Get profile photo from related user
+    /**
+     * Get profile photo URL from related user
+     */
     public function getProfilePhotoUrlAttribute()
     {
         return $this->user?->profile_photo_url;
     }
 
-    // Calculate age automatically
+    /**
+     * Calculate age from date of birth
+     */
     public function getAgeAttribute()
     {
-        return $this->date_of_birth
-            ? $this->date_of_birth->age
-            : null;
+        return $this->date_of_birth ? $this->date_of_birth->age : null;
     }
 
-    // Alias for registration date
+    /**
+     * Get registration date (alias for created_at)
+     */
     public function getRegisteredAtAttribute()
     {
         return $this->created_at;
