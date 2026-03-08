@@ -11,18 +11,23 @@ return new class extends Migration
         Schema::create('teachers', function (Blueprint $table) {
             $table->id();
 
-            // relasi ke users (untuk login)
             $table->foreignId('user_id')
-                  ->constrained('users')
-                  ->cascadeOnDelete();
+                ->unique()
+                ->constrained('users')
+                ->cascadeOnDelete();
 
-            // kode unik guru (dari Excel: PGJ-0001)
-            $table->string('teacher_code')->unique();
+            $table->string('teacher_code')->nullable();
 
-            // guru hanya boleh 1 mapel
             $table->foreignId('subject_id')
-                  ->constrained('subjects')
-                  ->cascadeOnDelete();
+                ->nullable()
+                ->constrained('subjects')
+                ->nullOnDelete();
+
+            $table->string('subject_name_pending')->nullable();
+
+            $table->date('date_of_birth')->nullable();
+
+            $table->string('profile_photo')->nullable();
 
             $table->timestamps();
         });

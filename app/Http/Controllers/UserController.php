@@ -10,7 +10,7 @@ use App\Imports\UsersImport;
 
 class UserController extends Controller
 {
-        public function index(Request $request)
+    public function index(Request $request)
     {
         $query = User::query();
 
@@ -80,7 +80,6 @@ class UserController extends Controller
         ]);
     }
 
-
     public function updatePassword(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -111,26 +110,32 @@ class UserController extends Controller
     public function importTeachers(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,csv'
+            'file' => 'required|file|mimes:xlsx,xls,csv'
         ]);
 
-        Excel::import(new UsersImport('teacher'), $request->file('file'));
+        $import = new UsersImport('teacher');
+
+        Excel::import($import, $request->file('file'));
 
         return response()->json([
-            'message' => 'Teachers imported successfully'
+            'message' => 'Teachers imported successfully',
+            'failures' => $import->failures()
         ]);
     }
 
     public function importStudents(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,csv'
+            'file' => 'required|file|mimes:xlsx,xls,csv'
         ]);
 
-        Excel::import(new UsersImport('student'), $request->file('file'));
+        $import = new UsersImport('student');
+
+        Excel::import($import, $request->file('file'));
 
         return response()->json([
-            'message' => 'Students imported successfully'
+            'message' => 'Students imported successfully',
+            'failures' => $import->failures()
         ]);
     }
 }

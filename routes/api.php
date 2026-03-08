@@ -9,31 +9,31 @@ use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\TeacherDashboardController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SubSubjectController;
+use App\Http\Controllers\UserPhotoController;
 
-// Login
 
+// LOGIN
 Route::post('/login', [AuthController::class, 'login']);
 
 
 // PROTECTED
-
 Route::middleware('auth:sanctum')->group(function () {
 
     // AUTH
-
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/logout-all', [AuthController::class, 'logoutAll']);
     Route::get('/me', [AuthController::class, 'me']);
 
-
     // PUBLIC
-
     Route::apiResource('subjects', SubjectController::class);
     Route::apiResource('sub-subjects', SubSubjectController::class);
 
 
-    // ADMIN
-
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('admin')
         ->middleware('role:admin')
         ->group(function () {
@@ -44,6 +44,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Import users
         Route::post('/import/teachers', [UserController::class, 'importTeachers']);
         Route::post('/import/students', [UserController::class, 'importStudents']);
+
+        // Import photos
+        Route::post('/import/photos', [UserPhotoController::class, 'upload']);
 
         // Users management
         Route::apiResource('users', UserController::class);
@@ -61,29 +64,36 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 
-    // Teacher
-
+    /*
+    |--------------------------------------------------------------------------
+    | TEACHER
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('teacher')
         ->middleware('role:teacher')
         ->group(function () {
 
         Route::get('/dashboard', [TeacherDashboardController::class, 'index']);
 
-        //jadwal sendiri
+        // jadwal sendiri
         Route::get('/schedules', [ScheduleController::class, 'mySchedule']);
     });
 
 
-    // Student
-
+    /*
+    |--------------------------------------------------------------------------
+    | STUDENT
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('student')
         ->middleware('role:student')
         ->group(function () {
 
         Route::get('/dashboard', [StudentDashboardController::class, 'index']);
 
-        //jadwal kelasnya
+        // jadwal kelasnya
         Route::get('/schedules', [ScheduleController::class, 'classSchedule']);
     });
 
 });
+

@@ -17,6 +17,7 @@ class Teacher extends Model
         'user_id',
         'teacher_code',
         'subject_id',
+        'subject_name_pending',
         'date_of_birth',
         'profile_photo',
     ];
@@ -35,7 +36,7 @@ class Teacher extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | AUTO LOAD RELATIONS (Avoid N+1)
+    | AUTO LOAD RELATIONS
     |--------------------------------------------------------------------------
     */
 
@@ -50,19 +51,16 @@ class Teacher extends Model
     |--------------------------------------------------------------------------
     */
 
-    // Relasi ke akun login
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Guru hanya 1 mapel
     public function subject()
     {
         return $this->belongsTo(Subject::class);
     }
 
-    // Relasi ke jadwal
     public function schedules()
     {
         return $this->hasMany(Schedule::class);
@@ -70,7 +68,7 @@ class Teacher extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | SCOPES (Filtering API)
+    | SCOPES
     |--------------------------------------------------------------------------
     */
 
@@ -81,7 +79,7 @@ class Teacher extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | CONFLICT HELPER (Core Scheduling System)
+    | CONFLICT CHECK
     |--------------------------------------------------------------------------
     */
 

@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\User;
+use App\Models\Subject;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -30,20 +31,62 @@ class UsersImport implements
     {
         return DB::transaction(function () use ($row) {
 
+            if ($this->role === 'teacher') {
+
+                $kodeUser = trim($row['id_pengajar'] ?? '');
+                $name = trim($row['nama_pengajar'] ?? '');
+                $password = (string) ($row['password_default'] ?? '123456');
+                $subjectInput = trim($row['mapel'] ?? '');
+
+            } else {
+
+                $kodeUser = trim($row['id_siswa'] ?? '');
+                $name = trim($row['nama_siswa'] ?? '');
+                $password = (string) ($row['password_default'] ?? '123456');
+                $subjectInput = null;
+            }
+
+            if (!$kodeUser) {
+                return null;
+            }
+
             $user = User::create([
-                'name'      => $row['name'],
-                'kode_user' => $row['kode_user'],
+                'kode_user' => $kodeUser,
+                'name'      => $name,
                 'role'      => $this->role,
-                'password'  => Hash::make($row['password']),
+                'password'  => Hash::make($password),
             ]);
 
-            // Auto create relasi
             if ($this->role === 'student') {
-                $user->student()->create([]);
+
+                $user->student()->create([
+                    'year' => now()->year
+                ]);
             }
 
             if ($this->role === 'teacher') {
-                $user->teacher()->create([]);
+
+                $subject = null;
+
+                if ($subjectInput) {
+
+                    $normalized = strtolower($subjectInput);
+
+                    $subject = Subject::whereRaw(
+                        'LOWER(TRIM(name)) = ?',
+                        [$normalized]
+                    )->first();
+
+                    if (!$subject) {
+                        $subject = Subject::create([
+                            'name' => $subjectInput
+                        ]);
+                    }
+                }
+
+                $user->teacher()->create([
+                    'subject_id' => $subject?->id
+                ]);
             }
 
             return $user;
@@ -52,10 +95,20 @@ class UsersImport implements
 
     public function rules(): array
     {
+        if ($this->role === 'teacher') {
+
+            return [
+                '*.id_pengajar' => 'required|string|distinct|unique:users,kode_user',
+                '*.nama_pengajar' => 'required|string|max:255',
+                '*.password_default' => 'nullable|min:3',
+                '*.mapel' => 'required|string'
+            ];
+        }
+
         return [
-            '*.name'      => 'required|string|max:255',
-            '*.kode_user' => 'required|string|unique:users,kode_user',
-            '*.password'  => 'required|string|min:6',
+            '*.id_siswa' => 'required|string|distinct|unique:users,kode_user',
+            '*.nama_siswa' => 'required|string|max:255',
+            '*.password_default' => 'nullable|min:3'
         ];
     }
 }

@@ -11,6 +11,11 @@ use Illuminate\Database\QueryException;
 
 class ScheduleController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | INDEX
+    |--------------------------------------------------------------------------
+    */
     public function index(Request $request)
     {
         $query = Schedule::with([
@@ -34,7 +39,10 @@ class ScheduleController extends Controller
         }
 
         return response()->json(
-            $query->orderBy('session_id')->get()
+            $query
+                ->orderBy('day')
+                ->orderBy('session_id')
+                ->get()
         );
     }
 
@@ -62,14 +70,14 @@ class ScheduleController extends Controller
 
         $teacher = Teacher::findOrFail($validated['teacher_id']);
 
-        // 🔒 Validasi guru sesuai subject yang dipilih
+        // Teacher harus sesuai subject
         if ($teacher->subject_id != $validated['subject_id']) {
             return response()->json([
                 'message' => 'Teacher does not teach selected subject.'
             ], 422);
         }
 
-        // 🔒 Validasi sub subject milik subject
+        // Sub subject harus milik subject
         if (!empty($validated['sub_subject_id'])) {
             $validSub = SubSubject::where('id', $validated['sub_subject_id'])
                 ->where('subject_id', $validated['subject_id'])
@@ -85,13 +93,13 @@ class ScheduleController extends Controller
         $data = [
             'class_room_id' => $validated['class_room_id'],
             'teacher_id'    => $teacher->id,
-            'subject_id'    => $teacher->subject_id, // 🔥 final subject ikut guru
+            'subject_id'    => $teacher->subject_id,
             'sub_subject_id'=> $validated['sub_subject_id'] ?? null,
             'session_id'    => $validated['session_id'],
             'day'           => $validated['day'],
         ];
 
-        // 🔥 Conflict Check - Class
+        // Conflict Class
         if (Schedule::hasClassConflict(
             $data['class_room_id'],
             $data['day'],
@@ -102,7 +110,7 @@ class ScheduleController extends Controller
             ], 422);
         }
 
-        // 🔥 Conflict Check - Teacher
+        // Conflict Teacher
         if (Schedule::hasTeacherConflict(
             $data['teacher_id'],
             $data['day'],
@@ -114,6 +122,7 @@ class ScheduleController extends Controller
         }
 
         try {
+
             $schedule = Schedule::create($data);
 
             return response()->json(
@@ -128,9 +137,11 @@ class ScheduleController extends Controller
             );
 
         } catch (QueryException $e) {
+
             return response()->json([
                 'message' => 'Schedule conflict detected at database level.'
             ], 422);
+
         }
     }
 
@@ -158,14 +169,12 @@ class ScheduleController extends Controller
 
         $teacher = Teacher::findOrFail($validated['teacher_id']);
 
-        // 🔒 Validasi guru sesuai subject
         if ($teacher->subject_id != $validated['subject_id']) {
             return response()->json([
                 'message' => 'Teacher does not teach selected subject.'
             ], 422);
         }
 
-        // 🔒 Validasi sub subject milik subject
         if (!empty($validated['sub_subject_id'])) {
             $validSub = SubSubject::where('id', $validated['sub_subject_id'])
                 ->where('subject_id', $validated['subject_id'])
@@ -187,7 +196,7 @@ class ScheduleController extends Controller
             'day'           => $validated['day'],
         ];
 
-        // 🔥 Conflict Check - Class (ignore current id)
+        // Conflict Class
         if (Schedule::hasClassConflict(
             $data['class_room_id'],
             $data['day'],
@@ -199,7 +208,7 @@ class ScheduleController extends Controller
             ], 422);
         }
 
-        // 🔥 Conflict Check - Teacher (ignore current id)
+        // Conflict Teacher
         if (Schedule::hasTeacherConflict(
             $data['teacher_id'],
             $data['day'],
@@ -212,6 +221,7 @@ class ScheduleController extends Controller
         }
 
         try {
+
             $schedule->update($data);
 
             return response()->json(
@@ -225,9 +235,11 @@ class ScheduleController extends Controller
             );
 
         } catch (QueryException $e) {
+
             return response()->json([
                 'message' => 'Schedule conflict detected at database level.'
             ], 422);
+
         }
     }
 
@@ -243,5 +255,136 @@ class ScheduleController extends Controller
         return response()->json([
             'message' => 'Schedule deleted successfully.'
         ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | TEACHERS BY SUBJECT
+    |--------------------------------------------------------------------------
+    */
+    public function teachersBySubject($subjectId)
+    {
+        return response()->json(
+            Teacher::with('user')
+                ->where('subject_id', $subjectId)
+                ->get()
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUB SUBJECTS BY SUBJECT
+    |--------------------------------------------------------------------------
+    */
+    public function subSubjectsBySubject($subjectId)
+    {
+        return response()->json(
+            SubSubject::where('subject_id', $subjectId)->get()
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCHEDULE BY CLASS
+    |--------------------------------------------------------------------------
+    */
+    public function byClass($classRoomId)
+    {
+        return response()->json(
+            Schedule::with([
+                'classRoom',
+                'teacher.user',
+                'subject',
+                'subSubject',
+                'session'
+            ])
+            ->where('class_room_id', $classRoomId)
+            ->orderBy('day')
+            ->orderBy('session_id')
+            ->get()
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCHEDULE BY TEACHER
+    |--------------------------------------------------------------------------
+    */
+    public function byTeacher($teacherId)
+    {
+        return response()->json(
+            Schedule::with([
+                'classRoom',
+                'teacher.user',
+                'subject',
+                'subSubject',
+                'session'
+            ])
+            ->where('teacher_id', $teacherId)
+            ->orderBy('day')
+            ->orderBy('session_id')
+            ->get()
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | TEACHER OWN SCHEDULE
+    |--------------------------------------------------------------------------
+    */
+    public function mySchedule(Request $request)
+    {
+        $teacher = $request->user()->teacher;
+
+        if (!$teacher) {
+            return response()->json([
+                'message' => 'Teacher not found'
+            ], 404);
+        }
+
+        return response()->json(
+            Schedule::with([
+                'classRoom',
+                'subject',
+                'subSubject',
+                'session'
+            ])
+            ->where('teacher_id', $teacher->id)
+            ->orderBy('day')
+            ->orderBy('session_id')
+            ->get()
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | STUDENT CLASS SCHEDULE
+    |--------------------------------------------------------------------------
+    */
+    public function classSchedule(Request $request)
+    {
+        $student = $request->user()->student;
+
+        if (!$student) {
+            return response()->json([
+                'message' => 'Student not found'
+            ], 404);
+        }
+
+        $classIds = $student->classRooms()->pluck('class_rooms.id');
+
+        return response()->json(
+            Schedule::with([
+                'teacher.user',
+                'subject',
+                'subSubject',
+                'session',
+                'classRoom'
+            ])
+            ->whereIn('class_room_id', $classIds)
+            ->orderBy('day')
+            ->orderBy('session_id')
+            ->get()
+        );
     }
 }
